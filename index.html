@@ -194,19 +194,39 @@
 
         // Export reconciled data to Excel
         document.getElementById('exportBtn').addEventListener('click', function () {
-            const ws = XLSX.utils.json_to_sheet(stockData.map(product => ({
-                ...product,
-                actualQty: product.quantity,
-                variance: 'TODO',  // Calculate variance if needed
-                remark: 'TODO',  // Add remark if needed
-            })));
+            const exportedData = stockData.map((product, index) => {
+                const actualQtyInput = document.querySelector(`#stockTable tbody tr:nth-child(${index + 1}) .actualQty`);
+                const actualQty = parseFloat(actualQtyInput ? actualQtyInput.value : 0); // Get actual quantity from input
+                const variance = actualQty - parseFloat(product.quantity); // Calculate variance
+                const { remark } = calculateRemark(product.quantity, actualQty); // Get remark based on system and actual quantity
 
+                return {
+                    ...product,
+                    actualQty: actualQty,
+                    variance: variance,
+                    remark: remark
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(exportedData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Reconciled Data");
             XLSX.writeFile(wb, 'reconciled_data.xlsx');
         });
 
-    </script>
+        // Download template functionality
+        document.getElementById('downloadTemplateBtn').addEventListener('click', function () {
+            const templateData = [
+                ["Product Name", "System Quantity", "Cost", "Category"],
+                ["Example Product", 10, 5.99, "Example Category"]
+            ];
 
+            const ws = XLSX.utils.aoa_to_sheet(templateData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template");
+            XLSX.writeFile(wb, 'stock_template.xlsx');
+        });
+
+    </script>
 </body>
 </html>
